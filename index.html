@@ -1,0 +1,27 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"><meta http-equiv="refresh" content="60">
+<title>影仓 · 实时工作状态看板</title><style>
+body{font-family:-apple-system,"PingFang SC","Noto Sans CJK SC",sans-serif;background:#f5f5f4;margin:0;padding:24px;color:#1c1917}
+h1{font-size:22px;margin:0 0 4px}.sub{color:#78716c;font-size:13px;margin-bottom:16px}
+.sum{display:flex;gap:10px;margin-bottom:20px}.sum span{padding:6px 12px;border-radius:999px;font-size:13px;color:#fff}
+.g{background:#16a34a}.x{background:#9ca3af}.a{background:#f59e0b}.r{background:#dc2626}
+h2{font-size:15px;margin:18px 0 8px;color:#44403c}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.card{background:#fff;border-radius:10px;padding:12px 14px;border-left:6px solid;box-shadow:0 1px 2px #0001}
+.card b{font-size:15px}.st{display:inline-block;font-size:12px;color:#fff;padding:2px 8px;border-radius:6px;margin-left:6px}
+.task{margin:8px 0;font-size:13px;min-height:18px}.t{font-size:12px;color:#78716c}
+.stale{outline:2px dashed #dc2626}.stale .t{color:#dc2626;font-weight:600}
+</style></head><body>
+<h1>影仓 · 实时工作状态看板</h1><div class="sub" id="sub"></div><div class="sum" id="sum"></div><div id="board"></div>
+<script>
+const DATA=[{"岗位": "产品总监", "汇报给": "Jinyong", "状态": "进行中", "当前任务": "盯创建任务复刻与工作台通知验收；等 Jinyong 定创建任务步骤数；审产品经理的素材屏幕顺序", "更新时间": "2026-10-14 19:49"}, {"岗位": "项目经理", "汇报给": "Jinyong", "状态": "等待安排", "当前任务": "—", "更新时间": "2026-10-14 19:47"}, {"岗位": "COO 首席运营官", "汇报给": "Jinyong", "状态": "进行中", "当前任务": "组织搭建：分工方案落地、状态看板推行", "更新时间": "2026-10-14 19:49"}, {"岗位": "产品经理", "汇报给": "产品总监", "状态": "进行中", "当前任务": "修订素材屏幕顺序，写第 1 屏资产库列表文字线框", "更新时间": "2026-10-14 19:52"}, {"岗位": "设计总监", "汇报给": "产品总监", "状态": "进行中", "当前任务": "验收工作台通知标签（已退回UX修3处）和创建任务复刻（约20:15）", "更新时间": "2026-10-14 19:49"}, {"岗位": "研发主管", "汇报给": "产品总监", "状态": "等待安排", "当前任务": "—", "更新时间": "2026-10-14 19:47"}, {"岗位": "测试总监", "汇报给": "产品总监", "状态": "等待安排", "当前任务": "—", "更新时间": "2026-10-14 19:47"}, {"岗位": "UX 交互设计师", "汇报给": "设计总监", "状态": "已完成", "当前任务": "创建任务复刻和工作台通知标签都已交设计总监验收（8786 任务中心、工作台）", "更新时间": "2026-10-14 19:56"}, {"岗位": "UXR 用户研究员", "汇报给": "设计总监", "状态": "等待安排", "当前任务": "可用性测试提纲已完成，待创建任务复刻后更新", "更新时间": "2026-10-14 19:50"}];
+const C={'进行中':'g','已完成':'x','等待安排':'a','卡住':'r'},HEX={g:'#16a34a',x:'#9ca3af',a:'#f59e0b',r:'#dc2626'};
+const now=Date.now();
+function ago(s){const m=Math.floor((now-new Date(s.replace(' ','T')+':00+08:00'))/6e4);if(m<1)return'刚刚';if(m<60)return m+' 分钟前';const h=Math.floor(m/60);return h<24?h+' 小时 '+(m%60)+' 分钟前':Math.floor(h/24)+' 天前'}
+const fmt=new Intl.DateTimeFormat('zh-CN',{timeZone:'Asia/Shanghai',dateStyle:'short',timeStyle:'short'});
+document.getElementById('sub').textContent='页面打开时间 '+fmt.format(now)+'（北京时间）· 每 60 秒自动刷新 · 超过 2 小时未更新的成员会标红虚线框';
+const cnt={};DATA.forEach(r=>cnt[r.状态]=(cnt[r.状态]||0)+1);
+document.getElementById('sum').innerHTML=Object.keys(C).map(k=>`<span class="${C[k]}">${k} ${cnt[k]||0}</span>`).join('');
+const groups={};DATA.forEach(r=>(groups[r.汇报给]=groups[r.汇报给]||[]).push(r));
+const order=Object.keys(groups).sort((a,b)=>(a==='Jinyong'?-1:b==='Jinyong'?1:0));
+document.getElementById('board').innerHTML=order.map(g=>`<h2>汇报给：${g}</h2><div class="grid">`+groups[g].map(r=>{const c=C[r.状态]||'x',st=(now-new Date(r.更新时间.replace(' ','T')+':00+08:00'))>7.2e6;
+return `<div class="card${st?' stale':''}" style="border-color:${HEX[c]}"><b>${r.岗位}</b><span class="st ${c}">${r.状态}</span><div class="task">${r.当前任务}</div><div class="t">更新于 ${r.更新时间}（${ago(r.更新时间)}）${st?' · 超过 2 小时未更新':''}</div></div>`}).join('')+'</div>').join('');
+</script></body></html>
